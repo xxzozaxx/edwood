@@ -22,6 +22,7 @@ import (
 const (
 	Ldot   = "."
 	TABDIR = 3
+	KeyCtl  = 0x1f // usage example, ^A = KeyCtl & 'a'
 )
 
 var (
@@ -629,7 +630,7 @@ func (t *Text) Constrain(q0, q1 int) (p0, p1 int) {
 
 func (t *Text) BsWidth(c rune) int {
 	// there is known to be at least one character to erase
-	if c == 0x08 { // ^H: erase character
+	if c == 0x127 { // ^H: erase character
 		return 1
 	}
 	q := t.q0
@@ -766,7 +767,7 @@ func (t *Text) Type(r rune) {
 	}
 
 	switch r {
-	case draw.KeyLeft:
+	case draw.KeyLeft, KeyCtl & 'h': // ^H: move to the left one char
 		t.TypeCommit()
 		if t.q0 > 0 {
 			if t.q0 != t.q1 {
@@ -776,7 +777,7 @@ func (t *Text) Type(r rune) {
 			}
 		}
 		return
-	case draw.KeyRight:
+	case draw.KeyRight, KeyCtl & 'l': // ^L: move to right one char
 		t.TypeCommit()
 		if t.q1 < t.file.Size() {
 			// This is a departure from the plan9/plan9port acme
@@ -855,7 +856,7 @@ func (t *Text) Type(r rune) {
 			t.Show(t.file.Size(), t.file.Size(), false)
 		}
 		return
-	case 0x01: // ^A: beginning of line
+	case KeyCtl & 'a': // ^A: beginning of line
 		t.TypeCommit()
 		// go to where ^U would erase, if not already at BOL
 		nnb = 0
@@ -864,7 +865,7 @@ func (t *Text) Type(r rune) {
 		}
 		t.Show(t.q0-nnb, t.q0-nnb, true)
 		return
-	case 0x05: // ^E: end of line
+	case KeyCtl & 'e': // ^E: end of line
 		t.TypeCommit()
 		q0 = t.q0
 		for q0 < t.file.Size() && t.file.ReadC(q0) != '\n' {
@@ -892,7 +893,7 @@ func (t *Text) Type(r rune) {
 	}
 	// cut/paste must be done after the seq++/filemark
 	switch r {
-	case draw.KeyCmd + 'x': // %X: cut
+	case draw.KeyCmd + 'x', KeyCtl & 'x': // %X: cut
 		t.TypeCommit()
 		if t.what == Body {
 			seq++
@@ -902,7 +903,7 @@ func (t *Text) Type(r rune) {
 		t.Show(t.q0, t.q0, true)
 		t.iq1 = t.q0
 		return
-	case draw.KeyCmd + 'v': // %V: paste
+	case draw.KeyCmd + 'v', KeyCtl & 'v': // %V: paste
 		t.TypeCommit()
 		if t.what == Body {
 			seq++
@@ -956,7 +957,7 @@ func (t *Text) Type(r rune) {
 			cut(t, t, nil, false, true, "")
 		}
 		return
-	case 0x08:
+	case 0x127:
 		fallthrough // ^H: erase character
 	case 0x15:
 		fallthrough // ^U: erase line
