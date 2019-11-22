@@ -873,11 +873,32 @@ func (t *Text) Type(r rune) {
 		}
 		t.Show(q0, q0, true)
 		return
-	case draw.KeyCmd + 'c': // %C: copy
+	case KeyCtl & 'j': // ^J: go to next line
+		t.TypeCommit()
+		q0 := t.Q0()
+		nnb := 0
+		if q0 > 0 && t.ReadC(q0 - 1) != '\n' { nnb = t.BsWidth(0x15) }
+		for q0 < t.file.Size() && t.ReadC(q0) != '\n' { q0++ } // EOL
+		if q0 + 1 <= t.file.b.nc() { q0++ } // could New line
+		for q0 < t.file.Size() && t.ReadC(q0) != '\n' && nnb > 0 { q0++; nnb-- }
+		t.Show(q0, q0, true)
+		return
+	case KeyCtl & 'k': // ^K: go to previous line
+		t.TypeCommit()
+		q0 := t.Q0()
+		nnb := 0
+		if q0 > 0 && t.ReadC(q0 - 1) != '\n' { nnb = t.BsWidth(0x15) }
+		q0 -= nnb
+		if q0 > 0 { q0-- }
+		for q0 > 0 && t.ReadC(q0 - 1) != '\n' { q0-- }
+		q0 += nnb
+		t.Show(q0, q0, true)
+		return
+	case draw.KeyCmd + 'c', KeyCtl & 'c': // %C: copy
 		t.TypeCommit()
 		cut(t, t, nil, true, false, "")
 		return
-	case draw.KeyCmd + 'z': // %Z: undo
+	case draw.KeyCmd + 'z', KeyCtl & 'z': // %Z: undo
 		t.TypeCommit()
 		undo(t, nil, nil, true, false, "")
 		return
