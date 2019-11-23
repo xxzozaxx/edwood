@@ -630,7 +630,7 @@ func (t *Text) Constrain(q0, q1 int) (p0, p1 int) {
 
 func (t *Text) BsWidth(c rune) int {
 	// there is known to be at least one character to erase
-	if c == 0x127 { // ^H: erase character
+	if c == 0x08 { // ^H: erase character
 		return 1
 	}
 	q := t.q0
@@ -766,8 +766,9 @@ func (t *Text) Type(r rune) {
 		t.SetOrigin(q0, true)
 	}
 
+	// log.Printf("Here we enter %x\n", r)
 	switch r {
-	case draw.KeyLeft, KeyCtl & 'h': // ^H: move to the left one char
+	case draw.KeyLeft, KeyCtl & 'b': // ^B: move to the left one char
 		t.TypeCommit()
 		if t.q0 > 0 {
 			if t.q0 != t.q1 {
@@ -777,7 +778,7 @@ func (t *Text) Type(r rune) {
 			}
 		}
 		return
-	case draw.KeyRight, KeyCtl & 'l': // ^L: move to right one char
+	case draw.KeyRight, KeyCtl & 'f': // ^F: move to right one char
 		t.TypeCommit()
 		if t.q1 < t.file.Size() {
 			// This is a departure from the plan9/plan9port acme
@@ -873,7 +874,7 @@ func (t *Text) Type(r rune) {
 		}
 		t.Show(q0, q0, true)
 		return
-	case KeyCtl & 'j': // ^J: go to next line
+	case KeyCtl & 'n': // ^N: go to next line
 		t.TypeCommit()
 		q0 := t.Q0()
 		nnb := 0
@@ -883,7 +884,7 @@ func (t *Text) Type(r rune) {
 		for q0 < t.file.Size() && t.ReadC(q0) != '\n' && nnb > 0 { q0++; nnb-- }
 		t.Show(q0, q0, true)
 		return
-	case KeyCtl & 'k': // ^K: go to previous line
+	case KeyCtl & 'p': // ^P: go to previous line
 		t.TypeCommit()
 		q0 := t.Q0()
 		nnb := 0
@@ -945,7 +946,7 @@ func (t *Text) Type(r rune) {
 	}
 	t.Show(t.q0, t.q0, true)
 	switch r {
-	case 0x06:
+	case 0x1e:
 		fallthrough // ^F: complete
 	case draw.KeyInsert:
 		t.TypeCommit()
@@ -978,7 +979,7 @@ func (t *Text) Type(r rune) {
 			cut(t, t, nil, false, true, "")
 		}
 		return
-	case 0x127:
+	case 0x08:
 		fallthrough // ^H: erase character
 	case 0x15:
 		fallthrough // ^U: erase line
